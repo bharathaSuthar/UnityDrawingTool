@@ -112,8 +112,15 @@ namespace MyCompany.VectorEditor.Core
         // Clear texture
         public static void ClearTexture(Texture2D tex)
         {
+            // backward-compatible: clear to transparent
+            ClearTexture(tex, Color.clear);
+        }
+
+        public static void ClearTexture(Texture2D tex, Color background)
+        {
+            if (tex == null) return;
             Color[] pixels = new Color[tex.width * tex.height];
-            for (int i = 0; i < pixels.Length; i++) pixels[i] = Color.clear;
+            for (int i = 0; i < pixels.Length; i++) pixels[i] = background;
             tex.SetPixels(pixels);
             tex.Apply();
         }

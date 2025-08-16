@@ -8,11 +8,17 @@ namespace MyCompany.VectorEditor.Exporters
 {
     public static class SVGExporter
     {
-        public static void SaveSVG(string path, int width, int height, List<ShapeData> shapes)
+        public static void SaveSVG(string path, int width, int height, List<ShapeData> shapes, Color background)
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendLine($"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{width}\" height=\"{height}\" viewBox=\"0 0 {width} {height}\">");
 
+            // --- Background ---
+            string bgRGB; float bgOp;
+            ToSvgColor(background, out bgRGB, out bgOp);
+            sb.AppendLine($"  <rect width=\"100%\" height=\"100%\" fill=\"{bgRGB}\" fill-opacity=\"{bgOp:0.###}\" />");
+
+            // --- Shapes ---
             foreach (var shape in shapes)
             {
                 string strokeRGB; float strokeOp; string fillRGB; float fillOp;
@@ -58,6 +64,7 @@ namespace MyCompany.VectorEditor.Exporters
             File.WriteAllText(path, sb.ToString());
             Debug.Log($"SVG saved to {path}");
         }
+
 
         private static void ToSvgColor(Color c, out string rgb, out float opacity)
         {

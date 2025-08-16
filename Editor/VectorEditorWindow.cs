@@ -10,6 +10,7 @@ namespace MyCompany.VectorEditor.UI
     {
         private Texture2D canvasTex;
         private int texSize = 512;
+        private CanvasSettings canvas = new CanvasSettings(512, 512, Color.white);
 
         private List<ShapeData> shapes = new List<ShapeData>();
         private ShapeData currentShape;
@@ -36,13 +37,32 @@ namespace MyCompany.VectorEditor.UI
 
         private void OnEnable()
         {
-            canvasTex = new Texture2D(texSize, texSize, TextureFormat.RGBA32, false);
+            InitCanvas();
+        }
+
+        private void InitCanvas()
+        {
+            canvasTex = new Texture2D(canvas.width, canvas.height, TextureFormat.RGBA32, false);
             RedrawAll();
         }
 
         private void OnGUI()
         {
-            GUILayout.Label("Vector Editor (Modular) - Phase 1", EditorStyles.boldLabel);
+            GUILayout.Label("Vector Editor (With Canvas)", EditorStyles.boldLabel);
+
+            // Canvas settings
+            EditorGUILayout.Space();
+            GUILayout.Label("Canvas Settings", EditorStyles.boldLabel);
+            int newW = EditorGUILayout.IntField("Width", canvas.width);
+            int newH = EditorGUILayout.IntField("Height", canvas.height);
+            Color newBg = EditorGUILayout.ColorField("Background", canvas.backgroundColor);
+            if (newW != canvas.width || newH != canvas.height || newBg != canvas.backgroundColor)
+            {
+                canvas.width = Mathf.Max(32, newW);
+                canvas.height = Mathf.Max(32, newH);
+                canvas.backgroundColor = newBg;
+                InitCanvas();
+            }
 
             EditorGUILayout.BeginHorizontal();
             if (GUILayout.Button("Undo")) UndoAction();
@@ -83,7 +103,8 @@ namespace MyCompany.VectorEditor.UI
                 EditorGUILayout.EndHorizontal();
             }
 
-            Rect drawArea = GUILayoutUtility.GetRect(texSize, texSize, GUILayout.ExpandWidth(false));
+            // Draw area = exactly canvas size
+            Rect drawArea = GUILayoutUtility.GetRect(canvas.width, canvas.height, GUILayout.ExpandWidth(false));
             GUI.DrawTexture(drawArea, canvasTex);
 
             HandleInput(drawArea);
@@ -216,7 +237,7 @@ namespace MyCompany.VectorEditor.UI
 
         private void RedrawAll()
         {
-            DrawingUtils.ClearTexture(canvasTex);
+            DrawingUtils.ClearTexture(canvasTex, canvas.backgroundColor);
             foreach (var s in shapes)
             {
                 switch (s.mode)
@@ -277,8 +298,10 @@ namespace MyCompany.VectorEditor.UI
         {
             string path = EditorUtility.SaveFilePanel("Save SVG", "", "drawing.svg", "svg");
             if (string.IsNullOrEmpty(path)) return;
-            SVGExporter.SaveSVG(path, texSize, texSize, shapes);
+            SVGExporter.SaveSVG(path, canvas.width, canvas.height, shapes, canvas.backgroundColor);
             AssetDatabase.Refresh();
         }
+
+        // (other methods like HandleInput, Undo, Redo stay unchanged)
     }
 }
